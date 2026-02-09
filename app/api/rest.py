@@ -5,6 +5,7 @@ from ..schemas import ApiKeyResponse, DataItem, TimezoneEntry
 from ..services.data_service import data_service
 from ..services.api_key_service import api_key_service
 from ..services.ipinfo_service import ipinfo_service
+from ..services.math_service import math_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
 
@@ -26,6 +27,32 @@ async def issue_api_key() -> ApiKeyResponse:
 @router.get("/data", response_model=list[DataItem])
 async def list_data() -> list[DataItem]:
     return await data_service.get_data()
+
+
+@router.get("/math")
+async def math_get(expr: str, precision: int | None = Query(default=None, ge=1, le=16)) -> dict:
+    if " " in expr and "+" not in expr and "[" not in expr and "]" not in expr and "," not in expr:
+        expr = expr.replace(" ", "+")
+    try:
+        result = await math_service.evaluate(expr, precision)
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"expression": result.expression, "result": result.result, "precision": result.precision}
+
+
+@router.post("/math")
+async def math_post(payload: dict) -> dict:
+    expr = payload.get("expr")
+    precision = payload.get("precision")
+    try:
+        result = await math_service.evaluate(expr, precision)
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"expression": result.expression, "result": result.result, "precision": result.precision}
 
 
 @router.get("/ip/lookup")

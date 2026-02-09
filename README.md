@@ -34,6 +34,8 @@ Or with Docker Compose:
   - GET /v1/data
   - GET /v1/ip/lookup
   - GET /v1/ip/visitor
+  - GET /v1/math
+  - POST /v1/math
   - GET /v1/time/now
   - GET /v1/time/utc
   - GET /v1/time/epoch
@@ -88,4 +90,6 @@ Set these environment variables if needed:
 - DATABOX_IPINFO_LOOKUP_BASE_URL (default: https://ipinfo.io)
 - DATABOX_IPINFO_VISITOR_URL (default: https://api.ipinfo.io/lite/me)
 - DATABOX_IPINFO_TIMEOUT_SECONDS (default: 5)
+- DATABOX_MATH_EVAL_TIMEOUT_SECONDS (default: 10)
+- DATABOX_MATH_MAX_EXPR_LENGTH (default: 4096)
 - DATABOX_HTTP_SOURCE_URL (optional)

@@ -8,6 +8,7 @@ from strawberry.types import Info
 from ..services.api_key_service import api_key_service
 from ..services.data_service import data_service
 from ..services.ipinfo_service import ipinfo_service
+from ..services.math_service import math_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
 
@@ -130,6 +131,13 @@ class IpInfoResponse:
     ipinfo: JSON
     visitor_ip: str | None = None
     ip: str | None = None
+
+
+@strawberry.type
+class MathResult:
+    expression: str
+    result: str
+    precision: int | None
 
 
 @strawberry.type
@@ -317,6 +325,21 @@ class Query:
         except Exception as exc:
             raise GraphQLError(str(exc)) from exc
         return IpInfoResponse(ipinfo=data, visitor_ip=visitor_ip)
+
+    @strawberry.field
+    async def math(self, info: Info, expr: str, precision: int | None = None) -> MathResult:
+        await _require_api_key(info)
+        try:
+            result = await math_service.evaluate(expr, precision)
+        except TimeoutError as exc:
+            raise GraphQLError(str(exc)) from exc
+        except ValueError as exc:
+            raise GraphQLError(str(exc)) from exc
+        return MathResult(
+            expression=result.expression,
+            result=result.result,
+            precision=result.precision,
+        )
 
 
 @strawberry.type

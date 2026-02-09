@@ -38,6 +38,8 @@ class Settings:
     ipinfo_lookup_base_url: str = os.getenv("DATABOX_IPINFO_LOOKUP_BASE_URL", "https://ipinfo.io")
     ipinfo_visitor_url: str = os.getenv("DATABOX_IPINFO_VISITOR_URL", "https://api.ipinfo.io/lite/me")
     ipinfo_timeout_seconds: int = int(os.getenv("DATABOX_IPINFO_TIMEOUT_SECONDS", "5"))
+    math_eval_timeout_seconds: int = int(os.getenv("DATABOX_MATH_EVAL_TIMEOUT_SECONDS", "10"))
+    math_max_expr_length: int = int(os.getenv("DATABOX_MATH_MAX_EXPR_LENGTH", "4096"))
     http_source_url: str | None = os.getenv("DATABOX_HTTP_SOURCE_URL") or None
 
 
