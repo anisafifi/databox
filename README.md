@@ -107,6 +107,7 @@ Set these environment variables if needed:
 - DATABOX_PASSWORD_MAX_LENGTH (default: 128)
 - DATABOX_DICTIONARY_BASE_URL (default: https://api.dictionaryapi.dev/api/v2/entries)
 - DATABOX_DICTIONARY_TIMEOUT_SECONDS (default: 5)
+- DATABOX_SERVER_URL (optional OpenAPI server URL)
 - DATABOX_HTTP_SOURCE_URL (optional)
 
 ## Password presets

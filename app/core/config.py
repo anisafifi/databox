@@ -68,6 +68,7 @@ class Settings:
         "https://api.dictionaryapi.dev/api/v2/entries",
     )
     dictionary_timeout_seconds: int = int(os.getenv("DATABOX_DICTIONARY_TIMEOUT_SECONDS", "5"))
+    server_url: str | None = os.getenv("DATABOX_SERVER_URL") or None
     http_source_url: str | None = os.getenv("DATABOX_HTTP_SOURCE_URL") or None
 
 

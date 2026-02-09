@@ -9,11 +9,14 @@ from .core.logging_config import RequestLoggingMiddleware, setup_logging
 
 setup_logging(settings.log_level)
 
+openapi_servers = [{"url": settings.server_url}] if settings.server_url else None
+
 app = FastAPI(
     title=settings.app_name,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    servers=openapi_servers,
 )
 
 
