@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  databox:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABOX_ENV: "prod"
+      DATABOX_LOG_LEVEL: "INFO"
+      DATABOX_RATE_LIMIT_PER_MINUTE: "60"
+      DATABOX_NTP_SERVERS: "time.hixbe.com,time.google.com,time.cloudflare.com"
+      DATABOX_NTP_TIMEOUT_SECONDS: "2"
+      DATABOX_API_KEYS_PATH: "/app/data/api_keys.json"
+      DATABOX_LOCAL_DATA_PATH: "/app/data/sample.json"
+    volumes:
+      - ./data:/app/data
