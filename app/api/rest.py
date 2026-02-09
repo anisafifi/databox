@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+import base64
 import httpx
 
 from ..core.auth import require_api_key
@@ -9,6 +10,7 @@ from ..services.dictionary_service import dictionary_service
 from ..services.ipinfo_service import ipinfo_service
 from ..services.math_service import math_service
 from ..services.password_service import password_service
+from ..services.shamir_service import shamir_service
 from ..services.site_check_service import site_check_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
@@ -169,6 +171,56 @@ async def dictionary_lookup(word: str) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except httpx.RequestError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/shamir/secret/split")
+async def shamir_secret_split(payload: dict) -> dict:
+    secret = payload.get("secret")
+    shares = payload.get("shares")
+    threshold = payload.get("threshold")
+    encoding = payload.get("encoding", "utf-8")
+    if not isinstance(secret, str):
+        raise HTTPException(status_code=400, detail="secret must be a string")
+    try:
+        shares = int(shares)
+        threshold = int(threshold)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="shares and threshold must be integers") from exc
+    try:
+        if encoding == "base64":
+            secret_bytes = base64.urlsafe_b64decode(secret.encode("ascii"))
+        else:
+            secret_bytes = secret.encode("utf-8")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="invalid secret encoding") from exc
+    try:
+        shares_out = shamir_service.split(secret_bytes, shares, threshold)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "shares": shares_out,
+        "threshold": threshold,
+        "count": shares,
+        "encoding": encoding,
+    }
+
+
+@router.post("/shamir/secret/combine")
+async def shamir_secret_combine(payload: dict) -> dict:
+    shares = payload.get("shares")
+    if not isinstance(shares, list) or not shares:
+        raise HTTPException(status_code=400, detail="shares must be a non-empty list")
+    try:
+        secret_bytes = shamir_service.combine(shares)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    try:
+        secret = secret_bytes.decode("utf-8")
+        encoding = "utf-8"
+    except UnicodeDecodeError:
+        secret = base64.urlsafe_b64encode(secret_bytes).decode("ascii")
+        encoding = "base64"
+    return {"secret": secret, "encoding": encoding}
 
 
 @router.get("/ip/lookup")

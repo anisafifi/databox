@@ -1,3 +1,4 @@
+import base64
 import strawberry
 import httpx
 from fastapi import Request
@@ -12,6 +13,7 @@ from ..services.dictionary_service import dictionary_service
 from ..services.ipinfo_service import ipinfo_service
 from ..services.math_service import math_service
 from ..services.password_service import password_service
+from ..services.shamir_service import shamir_service
 from ..services.site_check_service import site_check_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
@@ -180,6 +182,20 @@ class DictionaryResult:
     word: str
     found: bool
     entries: JSON
+
+
+@strawberry.type
+class ShamirSecretSplitResult:
+    shares: list[str]
+    threshold: int
+    count: int
+    encoding: str
+
+
+@strawberry.type
+class ShamirSecretCombineResult:
+    secret: str
+    encoding: str
 
 
 @strawberry.type
@@ -484,6 +500,53 @@ class Query:
             found=result["found"],
             entries=result["entries"],
         )
+
+    @strawberry.field
+    async def shamir_secret_split(
+        self,
+        info: Info,
+        secret: str,
+        shares: int,
+        threshold: int,
+        encoding: str = "utf-8",
+    ) -> ShamirSecretSplitResult:
+        await _require_api_key(info)
+        try:
+            if encoding == "base64":
+                secret_bytes = base64.urlsafe_b64decode(secret.encode("ascii"))
+            else:
+                secret_bytes = secret.encode("utf-8")
+        except Exception as exc:
+            raise GraphQLError("invalid secret encoding") from exc
+        try:
+            shares_out = shamir_service.split(secret_bytes, shares, threshold)
+        except ValueError as exc:
+            raise GraphQLError(str(exc)) from exc
+        return ShamirSecretSplitResult(
+            shares=shares_out,
+            threshold=threshold,
+            count=shares,
+            encoding=encoding,
+        )
+
+    @strawberry.field
+    async def shamir_secret_combine(
+        self,
+        info: Info,
+        shares: list[str],
+    ) -> ShamirSecretCombineResult:
+        await _require_api_key(info)
+        try:
+            secret_bytes = shamir_service.combine(shares)
+        except ValueError as exc:
+            raise GraphQLError(str(exc)) from exc
+        try:
+            secret = secret_bytes.decode("utf-8")
+            encoding = "utf-8"
+        except UnicodeDecodeError:
+            secret = base64.urlsafe_b64encode(secret_bytes).decode("ascii")
+            encoding = "base64"
+        return ShamirSecretCombineResult(secret=secret, encoding=encoding)
 
 
 @strawberry.type

@@ -2,6 +2,8 @@
 
 Databox gathers data from offline or online sources and exposes a unified REST and GraphQL API using FastAPI.
 
+![Screenshot](./screenshot.png)
+
 ## Quick start
 
 1. Install dependencies:
@@ -42,6 +44,8 @@ Or with Docker Compose:
   - GET /v1/passphrase
   - POST /v1/passphrase
   - GET /v1/dictionary/en/{word}
+  - POST /v1/shamir/secret/split
+  - POST /v1/shamir/secret/combine
   - GET /v1/time/now
   - GET /v1/time/utc
   - GET /v1/time/epoch
@@ -119,7 +123,7 @@ When `preset` is set, you can still override any option explicitly.
 
 GraphQL mirrors the REST surface. Key fields include:
 
-- Queries: `health`, `data`, `timeNow`, `timeUtc`, `timeEpoch`, `timeConvert`, `timeDiff`, `timeWorld`, `timeFormat`, `timeNtpStatus`, `timeLeap`, `timezones`, `timezone`, `timezoneCurrent`, `timezoneAbbreviations`, `timezoneOffsets`, `timezoneZones`, `ipLookup`, `ipVisitor`, `math`, `siteCheck`, `password`, `passphrase`, `dictionaryEn`
+- Queries: `health`, `data`, `timeNow`, `timeUtc`, `timeEpoch`, `timeConvert`, `timeDiff`, `timeWorld`, `timeFormat`, `timeNtpStatus`, `timeLeap`, `timezones`, `timezone`, `timezoneCurrent`, `timezoneAbbreviations`, `timezoneOffsets`, `timezoneZones`, `ipLookup`, `ipVisitor`, `math`, `siteCheck`, `password`, `passphrase`, `dictionaryEn`, `shamirSecretSplit`, `shamirSecretCombine`
 - Mutations: `issueApiKey`
 
 ## External services
