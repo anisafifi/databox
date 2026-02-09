@@ -3,7 +3,7 @@ import socket
 import struct
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, tzinfo
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from ..core.config import settings
@@ -26,7 +26,7 @@ class TimeService:
         self._servers = servers
         self._timeout_seconds = timeout_seconds
 
-    def _get_timezone(self, tz_name: str) -> ZoneInfo | UTC:
+    def _get_timezone(self, tz_name: str) -> tzinfo:
         normalized = tz_name.upper()
         if normalized in {"UTC", "ETC/UTC"}:
             return UTC
