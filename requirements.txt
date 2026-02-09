@@ -3,3 +3,4 @@ uvicorn[standard]
 strawberry-graphql[fastapi]
 httpx
 tzdata
+python-dotenv

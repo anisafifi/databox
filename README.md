@@ -32,6 +32,8 @@ Or with Docker Compose:
   - GET /v1/health
   - POST /v1/auth/keys
   - GET /v1/data
+  - GET /v1/ip/lookup
+  - GET /v1/ip/visitor
   - GET /v1/time/now
   - GET /v1/time/utc
   - GET /v1/time/epoch
@@ -82,4 +84,8 @@ Set these environment variables if needed:
 - DATABOX_LOG_LEVEL (default: INFO)
 - DATABOX_NTP_SERVERS (default: time.hixbe.com,time.google.com,time.cloudflare.com)
 - DATABOX_NTP_TIMEOUT_SECONDS (default: 2)
+- DATABOX_IPINFO_TOKEN (required for IP endpoints)
+- DATABOX_IPINFO_LOOKUP_BASE_URL (default: https://ipinfo.io)
+- DATABOX_IPINFO_VISITOR_URL (default: https://api.ipinfo.io/lite/me)
+- DATABOX_IPINFO_TIMEOUT_SECONDS (default: 5)
 - DATABOX_HTTP_SOURCE_URL (optional)

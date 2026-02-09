@@ -1,6 +1,13 @@
 import os
 from dataclasses import dataclass, field
 
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
 
 def _split_csv(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
@@ -27,6 +34,10 @@ class Settings:
         )
     )
     ntp_timeout_seconds: int = int(os.getenv("DATABOX_NTP_TIMEOUT_SECONDS", "2"))
+    ipinfo_token: str | None = os.getenv("DATABOX_IPINFO_TOKEN") or None
+    ipinfo_lookup_base_url: str = os.getenv("DATABOX_IPINFO_LOOKUP_BASE_URL", "https://ipinfo.io")
+    ipinfo_visitor_url: str = os.getenv("DATABOX_IPINFO_VISITOR_URL", "https://api.ipinfo.io/lite/me")
+    ipinfo_timeout_seconds: int = int(os.getenv("DATABOX_IPINFO_TIMEOUT_SECONDS", "5"))
     http_source_url: str | None = os.getenv("DATABOX_HTTP_SOURCE_URL") or None
 
 

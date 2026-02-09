@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from ..core.auth import require_api_key
 from ..schemas import ApiKeyResponse, DataItem, TimezoneEntry
 from ..services.data_service import data_service
 from ..services.api_key_service import api_key_service
+from ..services.ipinfo_service import ipinfo_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
 
@@ -25,6 +26,25 @@ async def issue_api_key() -> ApiKeyResponse:
 @router.get("/data", response_model=list[DataItem])
 async def list_data() -> list[DataItem]:
     return await data_service.get_data()
+
+
+@router.get("/ip/lookup")
+async def ip_lookup(ip: str) -> dict:
+    try:
+        data = await ipinfo_service.fetch_lookup(ip)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"ip": ip, "ipinfo": data}
+
+
+@router.get("/ip/visitor")
+async def ip_visitor(request: Request) -> dict:
+    try:
+        data = await ipinfo_service.fetch_visitor()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    visitor_ip = request.client.host if request.client else None
+    return {"visitor_ip": visitor_ip, "ipinfo": data}
 
 
 @router.get("/time/now")

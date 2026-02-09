@@ -7,6 +7,7 @@ from strawberry.types import Info
 
 from ..services.api_key_service import api_key_service
 from ..services.data_service import data_service
+from ..services.ipinfo_service import ipinfo_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
 
@@ -122,6 +123,13 @@ class NtpLeap:
 @strawberry.type
 class HealthStatus:
     status: str
+
+
+@strawberry.type
+class IpInfoResponse:
+    ipinfo: JSON
+    visitor_ip: str | None = None
+    ip: str | None = None
 
 
 @strawberry.type
@@ -289,6 +297,26 @@ class Query:
         await _require_api_key(info)
         ntp = await time_service.get_ntp_time()
         return NtpLeap(leap_indicator=ntp.leap_indicator, server=ntp.server)
+
+    @strawberry.field
+    async def ip_lookup(self, info: Info, ip: str) -> IpInfoResponse:
+        await _require_api_key(info)
+        try:
+            data = await ipinfo_service.fetch_lookup(ip)
+        except Exception as exc:
+            raise GraphQLError(str(exc)) from exc
+        return IpInfoResponse(ipinfo=data, ip=ip)
+
+    @strawberry.field
+    async def ip_visitor(self, info: Info) -> IpInfoResponse:
+        await _require_api_key(info)
+        request: Request = info.context["request"]
+        visitor_ip = request.client.host if request.client else None
+        try:
+            data = await ipinfo_service.fetch_visitor()
+        except Exception as exc:
+            raise GraphQLError(str(exc)) from exc
+        return IpInfoResponse(ipinfo=data, visitor_ip=visitor_ip)
 
 
 @strawberry.type
