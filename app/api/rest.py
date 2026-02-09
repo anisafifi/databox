@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+import httpx
 
 from ..core.auth import require_api_key
 from ..schemas import ApiKeyResponse, DataItem, TimezoneEntry
 from ..services.data_service import data_service
 from ..services.api_key_service import api_key_service
+from ..services.dictionary_service import dictionary_service
 from ..services.ipinfo_service import ipinfo_service
 from ..services.math_service import math_service
+from ..services.password_service import password_service
+from ..services.site_check_service import site_check_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
 
@@ -53,6 +57,118 @@ async def math_post(payload: dict) -> dict:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"expression": result.expression, "result": result.result, "precision": result.precision}
+
+
+@router.get("/site/check")
+async def site_check(url: str) -> dict:
+    try:
+        return await site_check_service.check(url)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get("/password")
+async def password_get(
+    preset: str | None = None,
+    length: int | None = Query(default=None, ge=1, le=128),
+    lowercase: bool | None = None,
+    uppercase: bool | None = None,
+    digits: bool | None = None,
+    symbols: bool | None = None,
+    exclude_ambiguous: bool | None = None,
+    exclude_similar: bool | None = None,
+    no_repeats: bool | None = None,
+    min_lowercase: int | None = Query(default=None, ge=0),
+    min_uppercase: int | None = Query(default=None, ge=0),
+    min_digits: int | None = Query(default=None, ge=0),
+    min_symbols: int | None = Query(default=None, ge=0),
+) -> dict:
+    try:
+        return password_service.generate(
+            preset=preset,
+            length=length,
+            lowercase=lowercase,
+            uppercase=uppercase,
+            digits=digits,
+            symbols=symbols,
+            exclude_ambiguous=exclude_ambiguous,
+            exclude_similar=exclude_similar,
+            no_repeats=no_repeats,
+            min_lowercase=min_lowercase,
+            min_uppercase=min_uppercase,
+            min_digits=min_digits,
+            min_symbols=min_symbols,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/password")
+async def password_post(payload: dict) -> dict:
+    try:
+        return password_service.generate(
+            preset=payload.get("preset"),
+            length=payload.get("length"),
+            lowercase=payload.get("lowercase"),
+            uppercase=payload.get("uppercase"),
+            digits=payload.get("digits"),
+            symbols=payload.get("symbols"),
+            exclude_ambiguous=payload.get("exclude_ambiguous"),
+            exclude_similar=payload.get("exclude_similar"),
+            no_repeats=payload.get("no_repeats"),
+            min_lowercase=payload.get("min_lowercase"),
+            min_uppercase=payload.get("min_uppercase"),
+            min_digits=payload.get("min_digits"),
+            min_symbols=payload.get("min_symbols"),
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/passphrase")
+async def passphrase_get(
+    words: int = Query(default=4, ge=1, le=16),
+    separator: str = "-",
+    capitalize: bool = False,
+    include_number: bool = True,
+    include_symbol: bool = False,
+) -> dict:
+    try:
+        return password_service.generate_passphrase(
+            words=words,
+            separator=separator,
+            capitalize=capitalize,
+            include_number=include_number,
+            include_symbol=include_symbol,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/passphrase")
+async def passphrase_post(payload: dict) -> dict:
+    try:
+        return password_service.generate_passphrase(
+            words=int(payload.get("words", 4)),
+            separator=str(payload.get("separator", "-")),
+            capitalize=bool(payload.get("capitalize", False)),
+            include_number=bool(payload.get("include_number", True)),
+            include_symbol=bool(payload.get("include_symbol", False)),
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/dictionary/en/{word}")
+async def dictionary_lookup(word: str) -> dict:
+    try:
+        return await dictionary_service.lookup(word)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.get("/ip/lookup")

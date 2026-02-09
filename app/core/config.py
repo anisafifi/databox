@@ -40,6 +40,34 @@ class Settings:
     ipinfo_timeout_seconds: int = int(os.getenv("DATABOX_IPINFO_TIMEOUT_SECONDS", "5"))
     math_eval_timeout_seconds: int = int(os.getenv("DATABOX_MATH_EVAL_TIMEOUT_SECONDS", "10"))
     math_max_expr_length: int = int(os.getenv("DATABOX_MATH_MAX_EXPR_LENGTH", "4096"))
+    site_check_timeout_connect_seconds: int = int(
+        os.getenv("DATABOX_SITE_CHECK_TIMEOUT_CONNECT_SECONDS", "3")
+    )
+    site_check_timeout_read_seconds: int = int(
+        os.getenv("DATABOX_SITE_CHECK_TIMEOUT_READ_SECONDS", "5")
+    )
+    site_check_max_redirects: int = int(os.getenv("DATABOX_SITE_CHECK_MAX_REDIRECTS", "5"))
+    site_check_user_agent: str = os.getenv(
+        "DATABOX_SITE_CHECK_USER_AGENT",
+        "databox/1.0 (+https://github.com/anisafifi/databox)",
+    )
+    site_check_allowlist: list[str] = field(
+        default_factory=lambda: _split_csv(os.getenv("DATABOX_SITE_CHECK_ALLOWLIST", ""))
+    )
+    site_check_header_allowlist: list[str] = field(
+        default_factory=lambda: _split_csv(
+            os.getenv(
+                "DATABOX_SITE_CHECK_HEADER_ALLOWLIST",
+                "content-type,content-length,server,cache-control,location,date",
+            )
+        )
+    )
+    password_max_length: int = int(os.getenv("DATABOX_PASSWORD_MAX_LENGTH", "128"))
+    dictionary_base_url: str = os.getenv(
+        "DATABOX_DICTIONARY_BASE_URL",
+        "https://api.dictionaryapi.dev/api/v2/entries",
+    )
+    dictionary_timeout_seconds: int = int(os.getenv("DATABOX_DICTIONARY_TIMEOUT_SECONDS", "5"))
     http_source_url: str | None = os.getenv("DATABOX_HTTP_SOURCE_URL") or None
 
 

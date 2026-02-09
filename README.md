@@ -36,6 +36,12 @@ Or with Docker Compose:
   - GET /v1/ip/visitor
   - GET /v1/math
   - POST /v1/math
+  - GET /v1/site/check
+  - GET /v1/password
+  - POST /v1/password
+  - GET /v1/passphrase
+  - POST /v1/passphrase
+  - GET /v1/dictionary/en/{word}
   - GET /v1/time/now
   - GET /v1/time/utc
   - GET /v1/time/epoch
@@ -92,4 +98,37 @@ Set these environment variables if needed:
 - DATABOX_IPINFO_TIMEOUT_SECONDS (default: 5)
 - DATABOX_MATH_EVAL_TIMEOUT_SECONDS (default: 10)
 - DATABOX_MATH_MAX_EXPR_LENGTH (default: 4096)
+- DATABOX_SITE_CHECK_TIMEOUT_CONNECT_SECONDS (default: 3)
+- DATABOX_SITE_CHECK_TIMEOUT_READ_SECONDS (default: 5)
+- DATABOX_SITE_CHECK_MAX_REDIRECTS (default: 5)
+- DATABOX_SITE_CHECK_USER_AGENT (default: databox/1.0 (+https://github.com/anisafifi/databox))
+- DATABOX_SITE_CHECK_ALLOWLIST (optional CSV allowlist)
+- DATABOX_SITE_CHECK_HEADER_ALLOWLIST (default: content-type,content-length,server,cache-control,location,date)
+- DATABOX_PASSWORD_MAX_LENGTH (default: 128)
+- DATABOX_DICTIONARY_BASE_URL (default: https://api.dictionaryapi.dev/api/v2/entries)
+- DATABOX_DICTIONARY_TIMEOUT_SECONDS (default: 5)
 - DATABOX_HTTP_SOURCE_URL (optional)
+
+## Password presets
+
+Available presets: `strong`, `pin`, `passphrase`.
+When `preset` is set, you can still override any option explicitly.
+
+## GraphQL coverage
+
+GraphQL mirrors the REST surface. Key fields include:
+
+- Queries: `health`, `data`, `timeNow`, `timeUtc`, `timeEpoch`, `timeConvert`, `timeDiff`, `timeWorld`, `timeFormat`, `timeNtpStatus`, `timeLeap`, `timezones`, `timezone`, `timezoneCurrent`, `timezoneAbbreviations`, `timezoneOffsets`, `timezoneZones`, `ipLookup`, `ipVisitor`, `math`, `siteCheck`, `password`, `passphrase`, `dictionaryEn`
+- Mutations: `issueApiKey`
+
+## External services
+
+This project integrates with third-party services:
+
+- IP info: ipinfo.io (lookup and visitor endpoints)
+- Dictionary: dictionaryapi.dev (English entries)
+- NTP: time.hixbe.com, time.google.com, time.cloudflare.com
+
+## Contributors
+
+See Git history for contributors. Contributions are welcome.

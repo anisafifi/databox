@@ -1,4 +1,5 @@
 import strawberry
+import httpx
 from fastapi import Request
 from strawberry.exceptions import GraphQLError
 from strawberry.fastapi import GraphQLRouter
@@ -7,8 +8,11 @@ from strawberry.types import Info
 
 from ..services.api_key_service import api_key_service
 from ..services.data_service import data_service
+from ..services.dictionary_service import dictionary_service
 from ..services.ipinfo_service import ipinfo_service
 from ..services.math_service import math_service
+from ..services.password_service import password_service
+from ..services.site_check_service import site_check_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
 
@@ -138,6 +142,44 @@ class MathResult:
     expression: str
     result: str
     precision: int | None
+
+
+@strawberry.type
+class SiteCheckResult:
+    url: str
+    final_url: str
+    status_code: int
+    ok: bool
+    response_time_ms: float
+    headers: JSON
+    redirected: bool
+
+
+@strawberry.type
+class PasswordResult:
+    password: str
+    length: int
+    lowercase: bool
+    uppercase: bool
+    digits: bool
+    symbols: bool
+
+
+@strawberry.type
+class PassphraseResult:
+    passphrase: str
+    words: int
+    separator: str
+    capitalize: bool
+    include_number: bool
+    include_symbol: bool
+
+
+@strawberry.type
+class DictionaryResult:
+    word: str
+    found: bool
+    entries: JSON
 
 
 @strawberry.type
@@ -339,6 +381,108 @@ class Query:
             expression=result.expression,
             result=result.result,
             precision=result.precision,
+        )
+
+    @strawberry.field
+    async def site_check(self, info: Info, url: str) -> SiteCheckResult:
+        await _require_api_key(info)
+        try:
+            result = await site_check_service.check(url)
+        except ValueError as exc:
+            raise GraphQLError(str(exc)) from exc
+        except httpx.RequestError as exc:
+            raise GraphQLError(str(exc)) from exc
+        return SiteCheckResult(**result)
+
+    @strawberry.field
+    async def password(
+        self,
+        info: Info,
+        preset: str | None = None,
+        length: int | None = None,
+        lowercase: bool | None = None,
+        uppercase: bool | None = None,
+        digits: bool | None = None,
+        symbols: bool | None = None,
+        exclude_ambiguous: bool | None = None,
+        exclude_similar: bool | None = None,
+        no_repeats: bool | None = None,
+        min_lowercase: int | None = None,
+        min_uppercase: int | None = None,
+        min_digits: int | None = None,
+        min_symbols: int | None = None,
+    ) -> PasswordResult:
+        await _require_api_key(info)
+        try:
+            result = password_service.generate(
+                preset=preset,
+                length=length,
+                lowercase=lowercase,
+                uppercase=uppercase,
+                digits=digits,
+                symbols=symbols,
+                exclude_ambiguous=exclude_ambiguous,
+                exclude_similar=exclude_similar,
+                no_repeats=no_repeats,
+                min_lowercase=min_lowercase,
+                min_uppercase=min_uppercase,
+                min_digits=min_digits,
+                min_symbols=min_symbols,
+            )
+        except ValueError as exc:
+            raise GraphQLError(str(exc)) from exc
+        return PasswordResult(
+            password=result["password"],
+            length=result["length"],
+            lowercase=result["lowercase"],
+            uppercase=result["uppercase"],
+            digits=result["digits"],
+            symbols=result["symbols"],
+        )
+
+    @strawberry.field
+    async def passphrase(
+        self,
+        info: Info,
+        words: int = 4,
+        separator: str = "-",
+        capitalize: bool = False,
+        include_number: bool = True,
+        include_symbol: bool = False,
+    ) -> PassphraseResult:
+        await _require_api_key(info)
+        try:
+            result = password_service.generate_passphrase(
+                words=words,
+                separator=separator,
+                capitalize=capitalize,
+                include_number=include_number,
+                include_symbol=include_symbol,
+            )
+        except ValueError as exc:
+            raise GraphQLError(str(exc)) from exc
+        return PassphraseResult(
+            passphrase=result["passphrase"],
+            words=result["words"],
+            separator=result["separator"],
+            capitalize=result["capitalize"],
+            include_number=result["include_number"],
+            include_symbol=result["include_symbol"],
+        )
+
+    @strawberry.field
+    async def dictionary_en(self, info: Info, word: str) -> DictionaryResult:
+        await _require_api_key(info)
+        try:
+            result = await dictionary_service.lookup(word)
+        except ValueError as exc:
+            raise GraphQLError(str(exc)) from exc
+        except httpx.RequestError as exc:
+            raise GraphQLError(str(exc)) from exc
+        return DictionaryResult(
+            word=result["word"],
+            found=result["found"],
+            entries=result["entries"],
         )
 
 
