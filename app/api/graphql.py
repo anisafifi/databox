@@ -8,6 +8,7 @@ from strawberry.scalars import JSON
 from strawberry.types import Info
 
 from ..services.api_key_service import api_key_service
+from ..core.config import settings
 from ..services.data_service import data_service
 from ..services.dictionary_service import dictionary_service
 from ..services.ipinfo_service import ipinfo_service
@@ -20,6 +21,8 @@ from ..services.timezone_service import timezone_service
 
 
 async def _require_api_key(info: Info) -> None:
+    if not settings.require_api_key:
+        return None
     request: Request = info.context["request"]
     auth_header = request.headers.get("authorization") or ""
     if not auth_header.lower().startswith("bearer "):

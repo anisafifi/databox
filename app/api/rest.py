@@ -3,6 +3,7 @@ import base64
 import httpx
 
 from ..core.auth import require_api_key
+from ..core.config import settings
 from ..schemas import ApiKeyResponse, DataItem, TimezoneEntry
 from ..services.data_service import data_service
 from ..services.api_key_service import api_key_service
@@ -16,7 +17,13 @@ from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
 
 public_router = APIRouter()
-router = APIRouter(dependencies=[Depends(require_api_key)])
+# If API key enforcement is enabled, attach the dependency to the main router,
+# otherwise create an unconstrained router.
+router = (
+    APIRouter(dependencies=[Depends(require_api_key)])
+    if settings.require_api_key
+    else APIRouter()
+)
 
 
 @public_router.get("/health")
@@ -24,7 +31,7 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
-@public_router.post("/auth/keys", response_model=ApiKeyResponse)
+@router.post("/auth/keys", response_model=ApiKeyResponse)
 async def issue_api_key() -> ApiKeyResponse:
     record = await api_key_service.issue_key()
     return ApiKeyResponse(api_key=record["api_key"], created_at=record["created_at"])

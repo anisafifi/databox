@@ -13,6 +13,12 @@ def _split_csv(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _parse_bool(value: str, default: bool) -> bool:
+    if value is None:
+        return default
+    return str(value).strip().lower() in ("1", "true", "yes", "y")
+
+
 @dataclass(frozen=True)
 class Settings:
     app_name: str = "databox"
@@ -70,6 +76,7 @@ class Settings:
     dictionary_timeout_seconds: int = int(os.getenv("DATABOX_DICTIONARY_TIMEOUT_SECONDS", "5"))
     server_url: str | None = os.getenv("DATABOX_SERVER_URL") or None
     http_source_url: str | None = os.getenv("DATABOX_HTTP_SOURCE_URL") or None
+    require_api_key: bool = _parse_bool(os.getenv("DATABOX_REQUIRE_API_KEY", "true"), True)
 
 
 settings = Settings()
