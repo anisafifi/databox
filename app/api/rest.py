@@ -26,23 +26,23 @@ router = (
 )
 
 
-@public_router.get("/health")
+@public_router.get("/health", tags=["Health"])
 async def health() -> dict:
     return {"status": "ok"}
 
 
-@router.post("/auth/keys", response_model=ApiKeyResponse)
+@router.post("/auth/keys", response_model=ApiKeyResponse, tags=["Auth"])
 async def issue_api_key() -> ApiKeyResponse:
     record = await api_key_service.issue_key()
     return ApiKeyResponse(api_key=record["api_key"], created_at=record["created_at"])
 
 
-@router.get("/data", response_model=list[DataItem])
+@router.get("/data", response_model=list[DataItem], tags=["Data"])
 async def list_data() -> list[DataItem]:
     return await data_service.get_data()
 
 
-@router.get("/math")
+@router.get("/math", tags=["Math"])
 async def math_get(expr: str, precision: int | None = Query(default=None, ge=1, le=16)) -> dict:
     if " " in expr and "+" not in expr and "[" not in expr and "]" not in expr and "," not in expr:
         expr = expr.replace(" ", "+")
@@ -55,7 +55,7 @@ async def math_get(expr: str, precision: int | None = Query(default=None, ge=1, 
     return {"expression": result.expression, "result": result.result, "precision": result.precision}
 
 
-@router.post("/math")
+@router.post("/math", tags=["Math"])
 async def math_post(payload: dict) -> dict:
     expr = payload.get("expr")
     precision = payload.get("precision")
@@ -68,7 +68,7 @@ async def math_post(payload: dict) -> dict:
     return {"expression": result.expression, "result": result.result, "precision": result.precision}
 
 
-@router.get("/site/check")
+@router.get("/site/check", tags=["Site"])
 async def site_check(url: str) -> dict:
     try:
         return await site_check_service.check(url)
@@ -78,7 +78,7 @@ async def site_check(url: str) -> dict:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
-@router.get("/password")
+@router.get("/password", tags=["Password"])
 async def password_get(
     preset: str | None = None,
     length: int | None = Query(default=None, ge=1, le=128),
@@ -114,7 +114,7 @@ async def password_get(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.post("/password")
+@router.post("/password", tags=["Password"])
 async def password_post(payload: dict) -> dict:
     try:
         return password_service.generate(
@@ -136,7 +136,7 @@ async def password_post(payload: dict) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.get("/passphrase")
+@router.get("/passphrase", tags=["Password"])
 async def passphrase_get(
     words: int = Query(default=4, ge=1, le=16),
     separator: str = "-",
@@ -156,7 +156,7 @@ async def passphrase_get(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.post("/passphrase")
+@router.post("/passphrase", tags=["Password"])
 async def passphrase_post(payload: dict) -> dict:
     try:
         return password_service.generate_passphrase(
@@ -170,7 +170,7 @@ async def passphrase_post(payload: dict) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.get("/dictionary/en/{word}")
+@router.get("/dictionary/en/{word}", tags=["Dictionary"])
 async def dictionary_lookup(word: str) -> dict:
     try:
         return await dictionary_service.lookup(word)
@@ -180,7 +180,7 @@ async def dictionary_lookup(word: str) -> dict:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
-@router.post("/shamir/secret/split")
+@router.post("/shamir/secret/split", tags=["Shamir"])
 async def shamir_secret_split(payload: dict) -> dict:
     secret = payload.get("secret")
     shares = payload.get("shares")
@@ -212,7 +212,7 @@ async def shamir_secret_split(payload: dict) -> dict:
     }
 
 
-@router.post("/shamir/secret/combine")
+@router.post("/shamir/secret/combine", tags=["Shamir"])
 async def shamir_secret_combine(payload: dict) -> dict:
     shares = payload.get("shares")
     if not isinstance(shares, list) or not shares:
@@ -230,7 +230,7 @@ async def shamir_secret_combine(payload: dict) -> dict:
     return {"secret": secret, "encoding": encoding}
 
 
-@router.get("/ip/lookup")
+@router.get("/ip/lookup", tags=["IP"])
 async def ip_lookup(ip: str) -> dict:
     try:
         data = await ipinfo_service.fetch_lookup(ip)
@@ -239,7 +239,7 @@ async def ip_lookup(ip: str) -> dict:
     return {"ip": ip, "ipinfo": data}
 
 
-@router.get("/ip/visitor")
+@router.get("/ip/visitor", tags=["IP"])
 async def ip_visitor(request: Request) -> dict:
     try:
         data = await ipinfo_service.fetch_visitor()
@@ -249,7 +249,7 @@ async def ip_visitor(request: Request) -> dict:
     return {"visitor_ip": visitor_ip, "ipinfo": data}
 
 
-@router.get("/time/now")
+@router.get("/time/now", tags=["Time"])
 async def get_time_now(tz: str = "UTC") -> dict:
     try:
         current, ntp = await time_service.get_current_datetime(tz)
@@ -264,7 +264,7 @@ async def get_time_now(tz: str = "UTC") -> dict:
     }
 
 
-@router.get("/time/utc")
+@router.get("/time/utc", tags=["Time"])
 async def get_time_utc() -> dict:
     current, ntp = await time_service.get_utc_datetime()
     return {
@@ -276,13 +276,13 @@ async def get_time_utc() -> dict:
     }
 
 
-@router.get("/time/epoch")
+@router.get("/time/epoch", tags=["Time"])
 async def get_time_epoch() -> dict:
     _current, ntp = await time_service.get_utc_datetime()
     return {"unix": int(ntp.unix_time), "source": ntp.server}
 
 
-@router.get("/time/convert")
+@router.get("/time/convert", tags=["Time"])
 async def convert_time(value: str, from_tz: str, to_tz: str) -> dict:
     try:
         source_dt, target_dt = await time_service.convert_datetime(value, from_tz, to_tz)
@@ -296,13 +296,13 @@ async def convert_time(value: str, from_tz: str, to_tz: str) -> dict:
     }
 
 
-@router.get("/time/diff")
+@router.get("/time/diff", tags=["Time"])
 async def diff_time(start: str, end: str) -> dict:
     diff = await time_service.diff(start, end)
     return {"start": start, "end": end, "diff": diff}
 
 
-@router.get("/time/world")
+@router.get("/time/world", tags=["Time"])
 async def world_time(zones: str) -> dict:
     zone_list = [zone.strip() for zone in zones.split(",") if zone.strip()]
     if not zone_list:
@@ -314,7 +314,7 @@ async def world_time(zones: str) -> dict:
     return {"zones": results}
 
 
-@router.get("/time/format")
+@router.get("/time/format", tags=["Time"])
 async def format_time(timestamp: float, tz: str, fmt: str) -> dict:
     try:
         formatted = await time_service.format_time(timestamp, tz, fmt)
@@ -323,7 +323,7 @@ async def format_time(timestamp: float, tz: str, fmt: str) -> dict:
     return {"formatted": formatted, "timezone": tz, "format": fmt}
 
 
-@router.get("/time/ntp/status")
+@router.get("/time/ntp/status", tags=["Time"])
 async def get_ntp_status() -> dict:
     ntp = await time_service.get_ntp_time()
     return {
@@ -335,13 +335,13 @@ async def get_ntp_status() -> dict:
     }
 
 
-@router.get("/time/leap")
+@router.get("/time/leap", tags=["Time"])
 async def get_ntp_leap_indicator() -> dict:
     ntp = await time_service.get_ntp_time()
     return {"leap_indicator": ntp.leap_indicator, "server": ntp.server}
 
 
-@router.get("/timezones", response_model=list[TimezoneEntry])
+@router.get("/timezones", response_model=list[TimezoneEntry], tags=["Timezones"])
 async def list_timezones(
     search: str | None = None,
     abbreviation: str | None = None,
@@ -362,22 +362,22 @@ async def list_timezones(
     )
 
 
-@router.get("/timezones/abbreviations", response_model=list[str])
+@router.get("/timezones/abbreviations", response_model=list[str], tags=["Timezones"])
 async def list_timezone_abbreviations() -> list[str]:
     return await timezone_service.list_abbreviations()
 
 
-@router.get("/timezones/offsets", response_model=list[int])
+@router.get("/timezones/offsets", response_model=list[int], tags=["Timezones"])
 async def list_timezone_offsets() -> list[int]:
     return await timezone_service.list_offsets()
 
 
-@router.get("/timezones/zones", response_model=list[str])
+@router.get("/timezones/zones", response_model=list[str], tags=["Timezones"])
 async def list_timezone_zones() -> list[str]:
     return await timezone_service.list_zone_names()
 
 
-@router.get("/timezones/{zone_name:path}/current", response_model=TimezoneEntry)
+@router.get("/timezones/{zone_name:path}/current", response_model=TimezoneEntry, tags=["Timezones"])
 async def get_timezone_current(zone_name: str) -> TimezoneEntry:
     try:
         return await timezone_service.get_current_entry(zone_name)
@@ -385,7 +385,7 @@ async def get_timezone_current(zone_name: str) -> TimezoneEntry:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.get("/timezones/{zone_name:path}", response_model=TimezoneEntry)
+@router.get("/timezones/{zone_name:path}", response_model=TimezoneEntry, tags=["Timezones"])
 async def get_timezone(zone_name: str) -> TimezoneEntry:
     try:
         return await timezone_service.get_current_entry(zone_name)
