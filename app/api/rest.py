@@ -15,6 +15,8 @@ from ..services.shamir_service import shamir_service
 from ..services.site_check_service import site_check_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
+from ..services.truth_dare_service import generate_prompt as generate_truth_or_dare
+from ..services.periodic_service import periodic_service
 
 public_router = APIRouter()
 # If API key enforcement is enabled, attach the dependency to the main router,
@@ -391,3 +393,77 @@ async def get_timezone(zone_name: str) -> TimezoneEntry:
         return await timezone_service.get_current_entry(zone_name)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+
+
+@router.get("/truth-or-dare", tags=["Games"])
+async def truth_or_dare(
+    mode: str = Query(default="dare"),
+    game: str = Query(default="party"),
+    stage: str = Query(default="chill"),
+    notes: str | None = Query(default=None, max_length=200),
+    lang: str = Query(default="English", max_length=20),
+) -> dict:
+    try:
+        result = await generate_truth_or_dare(game=game, mode=mode, stage=stage, notes=notes, lang=lang)
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return result
+
+
+@router.get("/elements", tags=["Periodic"])
+async def elements(
+    group: int | None = Query(default=None),
+    period: int | None = Query(default=None),
+    block: str | None = Query(default=None),
+    category: str | None = Query(default=None),
+    discoverer: str | None = Query(default=None),
+) -> list:
+    filters = {"group": group, "period": period, "block": block, "category": category, "discoverer": discoverer}
+    out = await periodic_service.list_elements(filters)
+    # return lightweight list entries
+    return [
+        {
+            "atomicNumber": e.get("atomicNumber"),
+            "symbol": e.get("symbol"),
+            "name": e.get("name"),
+            "category": e.get("category"),
+            "atomicWeight": e.get("atomicWeight"),
+            "period": e.get("period"),
+            "group": e.get("group"),
+            "block": e.get("block"),
+            "stateAtSTP": e.get("stateAtSTP"),
+        }
+        for e in out
+    ]
+
+
+@router.get("/elements/{identifier}", tags=["Periodic"])
+async def element(identifier: str) -> dict:
+    el = await periodic_service.get_element(identifier)
+    if not el:
+        raise HTTPException(status_code=404, detail="Element not found")
+    return el
+
+
+@router.get("/groups", tags=["Periodic"])
+async def get_groups() -> list:
+    return await periodic_service.groups()
+
+
+@router.get("/periods", tags=["Periodic"])
+async def get_periods() -> list:
+    return await periodic_service.periods()
+
+
+@router.get("/blocks", tags=["Periodic"])
+async def get_blocks() -> list:
+    return await periodic_service.blocks()
+
+
+@router.get("/constants", tags=["Periodic"])
+async def get_constants() -> dict:
+    return await periodic_service.constants()

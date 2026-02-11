@@ -1,6 +1,60 @@
 # Databox
 
 Databox gathers data from offline or online sources and exposes a unified REST and GraphQL API using FastAPI.
+## Features
+
+### Truth or Dare Endpoint (Games)
+
+This project now includes a simple Truth-or-Dare generator endpoint (REST and GraphQL).
+
+- REST: `GET /v1/truth-or-dare` — query params: `mode`, `game`, `stage`, `notes`, `lang`.
+- GraphQL: `truth_or_dare(mode: String, game: String, stage: String, notes: String, lang: String)`
+
+By default the generator uses a small local set of prompts. You can configure an upstream proxy URL with the `DATABOX_TRUTH_DARE_PROXY_URL` environment variable to forward generation to an external service.
+
+Credit / Inspiration
+---------------------
+This feature was inspired by the Truth-or-Dare API by It-Bulls (api.it-bulls.com). Original description and feature ideas credit go to the original author. Why Choose This API?
+
+💬 Multilingual by Design
+Generate truths and dares in 100+ languages — from English, Spanish, and French to Russian, Korean, or Arabic. No manual translation needed. Just pass the lang parameter (full language name) and get localized fun instantly.
+
+🧠 AI-Powered Originality
+Each response is generated dynamically by a powerful language model, ensuring unique, natural, and context-appropriate prompts — never repeated, never boring.
+
+🧩 Flexible Customization
+Set the context, mood, or theme using the notes field (up to 200 characters):
+
+Add inside jokes or custom scenarios for personal flavor.
+Guide tone and style (e.g., “family-safe”, “flirty”, or “wild party”).
+
+❤️ Multiple Relationship or Social Modes
+Adapt the experience for any audience:
+
+Date mode: sweet or daring prompts for couples (game=date)
+Party mode: fun, silly, or bold challenges for groups (game=party)
+Within each game type, select a stage or vibe:
+
+Party: chill, party, wild
+Date: new, steady, forever
+
+⚙️ Simple to Use
+Just one API call — no sign-up, no setup. Works perfectly for mobile or web games, chatbots, dating apps, and ice-breaker widgets.
+
+Example Request
+
+GET https://api.it-bulls.com/truth-or-dare/v1/truth-or-dare.php?game=party&mode=dare&stage=chill&notes=family%20gathering%20safe%20content&lang=Spanish
+
+Example Response
+
+{
+  "ok": true,
+  "text": "Tell us about the funniest thing that ever happened during a family dinner!"
+}
+
+# Databox
+
+Databox gathers data from offline or online sources and exposes a unified REST and GraphQL API using FastAPI.
 
 ![Screenshot](./screenshot.png)
 

@@ -77,6 +77,9 @@ class Settings:
     server_url: str | None = os.getenv("DATABOX_SERVER_URL") or None
     http_source_url: str | None = os.getenv("DATABOX_HTTP_SOURCE_URL") or None
     require_api_key: bool = _parse_bool(os.getenv("DATABOX_REQUIRE_API_KEY", "true"), True)
+    truth_dare_proxy_url: str | None = os.getenv("DATABOX_TRUTH_DARE_PROXY_URL") or None
+    periodic_data_url: str | None = os.getenv("DATABOX_PERIODIC_DATA_URL", "https://raw.githubusercontent.com/komed3/periodic-table/master/_db/elements.json")
+    periodic_cache_path: str | None = os.getenv("DATABOX_PERIODIC_CACHE_PATH", "data/elements.json")
 
 
 settings = Settings()

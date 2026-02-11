@@ -19,6 +19,8 @@ from ..services.shamir_service import shamir_service
 from ..services.site_check_service import site_check_service
 from ..services.time_service import time_service
 from ..services.timezone_service import timezone_service
+from ..services.truth_dare_service import generate_prompt as generate_truth_or_dare
+from ..services.periodic_service import periodic_service
 
 
 async def _require_api_key(info: Info) -> None:
@@ -433,6 +435,57 @@ class SiteNamespace:
 
 
 @strawberry.type
+class PeriodicNamespace:
+    @strawberry.field
+    async def elements(self, info: Info, group: int | None = None, period: int | None = None, block: str | None = None, category: str | None = None, discoverer: str | None = None) -> JSON:
+        await _require_api_key(info)
+        filters = {"group": group, "period": period, "block": block, "category": category, "discoverer": discoverer}
+        out = await periodic_service.list_elements(filters)
+        return [
+            {
+                "atomicNumber": e.get("atomicNumber"),
+                "symbol": e.get("symbol"),
+                "name": e.get("name"),
+                "category": e.get("category"),
+                "atomicWeight": e.get("atomicWeight"),
+                "period": e.get("period"),
+                "group": e.get("group"),
+                "block": e.get("block"),
+                "stateAtSTP": e.get("stateAtSTP"),
+            }
+            for e in out
+        ]
+
+    @strawberry.field
+    async def element(self, info: Info, identifier: str) -> JSON:
+        await _require_api_key(info)
+        el = await periodic_service.get_element(identifier)
+        if not el:
+            raise GraphQLError("Element not found")
+        return el
+
+    @strawberry.field
+    async def groups(self, info: Info) -> JSON:
+        await _require_api_key(info)
+        return await periodic_service.groups()
+
+    @strawberry.field
+    async def periods(self, info: Info) -> JSON:
+        await _require_api_key(info)
+        return await periodic_service.periods()
+
+    @strawberry.field
+    async def blocks(self, info: Info) -> JSON:
+        await _require_api_key(info)
+        return await periodic_service.blocks()
+
+    @strawberry.field
+    async def constants(self, info: Info) -> JSON:
+        await _require_api_key(info)
+        return await periodic_service.constants()
+
+
+@strawberry.type
 class Query:
     @strawberry.field
     async def health(self) -> HealthStatus:
@@ -473,6 +526,16 @@ class Query:
     @strawberry.field
     def site(self) -> SiteNamespace:
         return SiteNamespace()
+
+    @strawberry.field
+    def periodic(self) -> PeriodicNamespace:
+        return PeriodicNamespace()
+
+    @strawberry.field
+    async def truth_or_dare(self, info: Info, mode: str = "dare", game: str = "party", stage: str = "chill", notes: str | None = None, lang: str = "English") -> JSON:
+        await _require_api_key(info)
+        result = await generate_truth_or_dare(game=game, mode=mode, stage=stage, notes=notes, lang=lang)
+        return result
 
 
 @strawberry.type
